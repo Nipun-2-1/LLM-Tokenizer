@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TokenLab — Token Vocabulary & Tokenizer Engine</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Top Menubar Navigation -->
+  <header class="app-header">
+    <nav class="menubar">
+      <div class="menubar-brand">
+        <span class="brand-icon">🔤</span>
+        <div class="brand-text-group">
+          <span class="brand-title">TokenLab</span>
+          <span class="brand-subtitle">Vocabulary &amp; Graph Engine</span>
+        </div>
+      </div>
+
+      <div class="nav-links" id="nav-links">
+        <button type="button" class="nav-btn active" data-screen="screen-vocab">
+          <span class="nav-icon">📚</span>
+          <span class="nav-text">Vocabulary</span>
+          <span class="badge" id="nav-vocab-count">0</span>
+        </button>
+        <button type="button" class="nav-btn" data-screen="screen-tokenizer">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Tokenizer</span>
+        </button>
+        <button type="button" class="nav-btn" data-screen="screen-meaning-spelling">
+          <span class="nav-icon">⚖️</span>
+          <span class="nav-text">Meaning vs. Spelling</span>
+        </button>
+        <button type="button" class="nav-btn" data-screen="screen-graphs">
+          <span class="nav-icon">🌳</span>
+          <span class="nav-text">Tree &amp; Cyclic Graphs</span>
+        </button>
+        <button type="button" class="nav-btn" data-screen="screen-analytics">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Analytics</span>
+        </button>
+      </div>
+
+      <div class="menubar-right">
+        <span class="quick-status">Next ID: <strong id="menubar-next-id">100</strong></span>
+        <button type="button" id="theme-toggle-btn" class="theme-toggle-btn" title="Toggle Light / Dark Mode" aria-label="Toggle theme">
+          <span class="theme-toggle-icon" id="theme-icon">🌙</span>
+          <span class="theme-toggle-text" id="theme-text">Dark</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container Hosting Different Screens -->
+  <main class="app-main">
+    
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 1: VOCABULARY BUILDER & MANAGER
+         ══════════════════════════════════════════════════ -->
+    <section id="screen-vocab" class="screen-view active-screen">
+      <div class="screen-header">
+        <div>
+          <h2>📚 Vocabulary Manager</h2>
+          <p class="screen-desc">Add tokens, customize token IDs, import bulk word lists, and manage your vocabulary catalog.</p>
+        </div>
+        <div class="screen-header-actions">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-load-1000">📦 Load 1,400+ Common Words</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-goto-tokenizer">Open Tokenizer ➔</button>
+        </div>
+      </div>
+
+      <div class="vocab-grid-layout">
+        <!-- Add Token & Bulk Import Column -->
+        <div class="vocab-forms-col">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>+ Add Token</h3>
+              <span class="badge" id="vocab-count">0</span>
+            </div>
+            <form id="token-form">
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="word-input">Word / Subword</label>
+                  <input type="text" id="word-input" placeholder="e.g. token or ##ing" autocomplete="off" required />
+                </div>
+                <div class="form-group flex-1">
+                  <label for="id-input">Token ID <span class="label-hint">(optional)</span></label>
+                  <input type="number" id="id-input" placeholder="Auto-assigned" min="0" />
+                </div>
+              </div>
+              <div class="form-row">
+                <button type="submit" class="btn btn-primary flex-2">+ Add to Vocab</button>
+                <button type="button" id="auto-suggest-id-btn" class="btn btn-secondary flex-1" title="Get next available ID">Next ID: <span id="next-id-hint">100</span></button>
+              </div>
+            </form>
+
+            <div class="bulk-section">
+              <h4>⚡ Bulk Vocabulary Import</h4>
+              <div class="form-group">
+                <label for="sentence-input">Sentence or Words List</label>
+                <textarea id="sentence-input" rows="2" placeholder="e.g. the quick brown fox jumps over the lazy dog"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="start-id-input">Starting Token ID</label>
+                  <input type="number" id="start-id-input" placeholder="Auto (max + 1)" min="0" />
+                </div>
+                <div class="form-group flex-1 btn-align-bottom">
+                  <button type="button" id="bulk-btn" class="btn btn-secondary">Bulk Add Words</button>
+                </div>
+              </div>
+
+              <div class="preset-pills">
+                <span class="preset-label">Presets:</span>
+                <button type="button" class="btn-pill" id="preset-1000">✨ 1,000+ Words</button>
+                <button type="button" class="btn-pill" id="preset-nlp">NLP Basics</button>
+                <button type="button" class="btn-pill" id="preset-semantic">Semantic Pairs</button>
+                <button type="button" class="btn-pill" id="preset-subwords">Subwords &amp; Suffixes</button>
+                <button type="button" class="btn-pill" id="preset-code">Code Tokens</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Column -->
+        <div class="vocab-table-col">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Vocabulary Catalog</h3>
+              <div class="panel-actions">
+                <input type="text" id="search-input" placeholder="Search tokens..." />
+                <button type="button" id="clear-btn" class="btn btn-danger btn-sm">Clear All</button>
+              </div>
+            </div>
+
+            <div class="table-wrap full-height-table">
+              <table id="vocab-table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%">Token ID</th>
+                    <th style="width: 38%">Word / Token</th>
+                    <th style="width: 24%">Category</th>
+                    <th style="width: 18%">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="vocab-body">
+                  <tr class="empty-row">
+                    <td colspan="4">No tokens yet — add some above!</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Cards Footer -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-value" id="stat-total">0</span>
+          <span class="stat-label">Total Tokens</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-unique">0</span>
+          <span class="stat-label">Unique Words</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-avg-len">0</span>
+          <span class="stat-label">Avg Length</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-max-id">—</span>
+          <span class="stat-label">Max Token ID</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 2: INTERACTIVE TOKENIZER
+         ══════════════════════════════════════════════════ -->
+    <section id="screen-tokenizer" class="screen-view">
+      <div class="screen-header">
+        <div>
+          <h2>⚙️ Interactive Tokenizer Engine</h2>
+          <p class="screen-desc">Tokenize arbitrary text, inspect token streams, auto-index unseen words, and examine Token ID sequences.</p>
+        </div>
+        <div class="screen-header-actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-goto-graphs">View in Graph ➔</button>
+        </div>
+      </div>
+
+      <div class="tokenizer-screen-layout">
+        <!-- Input Panel -->
+        <div class="panel tokenizer-panel">
+          <div class="panel-header">
+            <h3>Text Input &amp; Configuration</h3>
+            <div class="tokenizer-controls">
+              <label for="tokenizer-mode" class="inline-label">Algorithm:</label>
+              <select id="tokenizer-mode">
+                <option value="greedy">Greedy Longest Match (Subword)</option>
+                <option value="word">Whitespace / Word Tokenizer</option>
+                <option value="char">Character Fallback</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="input-header-row">
+              <label for="tokenize-text-input">Text to Tokenize</label>
+              <!-- Auto-Index Toggle -->
+              <label class="toggle-container" title="Automatically assign IDs to unseen words and add them to vocabulary">
+                <input type="checkbox" id="auto-index-toggle" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">⚡ Auto-Add New Words</span>
+              </label>
+            </div>
+            <textarea id="tokenize-text-input" rows="4" placeholder="Type or paste any text to see it converted into tokens and token IDs..."></textarea>
+          </div>
+
+          <div class="tokenizer-actions">
+            <button type="button" id="run-tokenize-btn" class="btn btn-primary">Tokenize Text</button>
+            <button type="button" id="auto-index-all-btn" class="btn btn-warning" title="Scan text and auto-assign indices to all new words">⚡ Auto-Index New Words</button>
+            <button type="button" id="sample-text-btn" class="btn btn-secondary">Load Sample Text</button>
+          </div>
+
+          <!-- Tokenizer Metrics Bar -->
+          <div class="tokenizer-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Tokens:</span>
+              <span class="metric-val" id="metric-token-count">0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Known:</span>
+              <span class="metric-val text-success" id="metric-known-count">0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Unknown (&lt;UNK&gt;):</span>
+              <span class="metric-val text-danger" id="metric-unk-count">0</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Vocab Hit Rate:</span>
+              <span class="metric-val text-accent" id="metric-hit-rate">100%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Stream Panel -->
+        <div class="panel">
+          <div class="output-header">
+            <h3>Token Stream</h3>
+            <span id="token-stream-count" class="badge">0 tokens</span>
+          </div>
+          <div id="token-stream" class="token-stream large-stream">
+            <span class="placeholder-text">Tokens will appear here as you type or click "Tokenize Text"...</span>
+          </div>
+
+          <!-- Token ID Sequence Display -->
+          <div class="token-id-sequence-box mt-4">
+            <div class="sequence-header">
+              <label>Numerical Token ID Sequence [IDs]</label>
+              <button type="button" id="copy-ids-btn" class="btn-copy">📋 Copy IDs</button>
+            </div>
+            <div id="token-ids-display" class="ids-display">[ ]</div>
+          </div>
+
+          <div class="token-help-tip">
+            <span>💡 <strong>Tip:</strong> Click on any <span style="color:#f43f5e;font-weight:bold;">UNK</span> chip to automatically index and register it into your vocabulary. Click any known token to inspect its spelling &amp; meaning!</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 3: MEANING-BASED VS. SPELLING-BASED GRAPH
+         ══════════════════════════════════════════════════ -->
+    <section id="screen-meaning-spelling" class="screen-view">
+      <div class="screen-header">
+        <div>
+          <h2>⚖️ Meaning vs. Spelling Graph Tool</h2>
+          <p class="screen-desc">Explore semantic meaning clusters vs. orthographic spelling similarities (edit-distance) across your token vocabulary.</p>
+        </div>
+        <div class="screen-header-actions">
+          <div class="view-switch-pills">
+            <button type="button" class="btn-pill active" id="btn-show-both">Dual Overlay</button>
+            <button type="button" class="btn-pill" id="btn-show-spelling">Spelling Only</button>
+            <button type="button" class="btn-pill" id="btn-show-meaning">Meaning Only</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meaning vs Spelling Toolbar -->
+      <div class="meaning-spelling-toolbar" id="meaning-spelling-toolbar">
+        <div class="toolbar-left">
+          <label for="ms-view-select" class="toolbar-label">3D View:</label>
+          <select id="ms-view-select">
+            <option value="dual-map">⚖️ 3D Meaning vs Spelling Cube</option>
+            <option value="meaning">🧠 3D Meaning Clusters</option>
+            <option value="spelling">🔤 3D Spelling Torus</option>
+          </select>
+
+          <label for="ms-cat-filter" class="toolbar-label">Filter:</label>
+          <select id="ms-cat-filter">
+            <option value="all">All Categories</option>
+            <option value="sentence">Active Sentence Words</option>
+            <option value="animals">🐾 Animals</option>
+            <option value="actions">🏃 Actions</option>
+            <option value="vehicles">🚗 Vehicles</option>
+            <option value="objects">📦 Objects</option>
+            <option value="grammar">🔠 Grammar</option>
+            <option value="modifiers">⚡ Modifiers</option>
+            <option value="tech">💻 Tech</option>
+          </select>
+
+          <label for="focus-word-select" class="toolbar-label">🔍 Inspect:</label>
+          <select id="focus-word-select">
+            <option value="">(All in 3D Space)</option>
+          </select>
+        </div>
+
+        <div class="toolbar-right">
+          <div class="threshold-control">
+            <label for="ms-density-range" class="toolbar-label">Visible Tokens:</label>
+            <input type="range" id="ms-density-range" min="15" max="120" step="5" value="40" title="Adjust number of visible nodes to prevent crowding" />
+            <span id="ms-density-val">40</span>
+          </div>
+
+          <div class="threshold-control">
+            <label for="sim-threshold" class="toolbar-label">Edges Sim &ge;:</label>
+            <input type="range" id="sim-threshold" min="0.3" max="0.9" step="0.05" value="0.55" />
+            <span id="threshold-val">0.55</span>
+          </div>
+
+          <button type="button" class="btn btn-pill" id="ms-auto-rotate-btn">🔄 Auto-Rotate</button>
+          <button type="button" id="ms-reset-view-btn" class="btn btn-secondary btn-sm">Reset 3D</button>
+        </div>
+      </div>
+
+      <!-- Focus Word Comparison Card -->
+      <div id="inspector-card" class="inspector-card" style="display: none;">
+        <div class="inspector-header">
+          <span class="inspector-word" id="inspector-word-title">Word</span>
+          <span class="inspector-badge" id="inspector-id-badge">ID: 101</span>
+          <span class="inspector-cat" id="inspector-cat-badge">Category: Animals</span>
+          <button type="button" id="inspector-close-btn" class="btn-icon">×</button>
+        </div>
+        <div class="inspector-columns">
+          <div class="inspector-col spelling-col">
+            <h4>🔤 Closest by Spelling (Orthographic)</h4>
+            <ul id="inspector-spelling-list"></ul>
+          </div>
+          <div class="inspector-col meaning-col">
+            <h4>🧠 Closest by Meaning (Semantic Domain)</h4>
+            <ul id="inspector-meaning-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graph Canvas Container -->
+      <div class="panel graph-canvas-panel">
+        <div class="graph-info-bar">
+          <span id="ms-graph-hint">💡 3D Orbit: Drag mouse to rotate • Scroll to zoom • Shift+Drag to pan • Click token to inspect</span>
+          <div class="graph-zoom-controls">
+            <button type="button" id="ms-zoom-in-btn" class="zoom-btn">+</button>
+            <button type="button" id="ms-zoom-out-btn" class="zoom-btn">−</button>
+            <span id="ms-zoom-level">100%</span>
+          </div>
+        </div>
+
+        <div class="canvas-container" id="ms-canvas-container">
+          <canvas id="ms-graph-canvas"></canvas>
+          <div id="ms-tooltip" class="tooltip"></div>
+        </div>
+
+        <div id="ms-graph-legend" class="graph-legend"></div>
+      </div>
+    </section>
+
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 4: TREE & CYCLIC GRAPHS
+         ══════════════════════════════════════════════════ -->
+    <section id="screen-graphs" class="screen-view">
+      <div class="screen-header">
+        <div>
+          <h2>🌳 3D Tree &amp; Cyclic Graph Visualizer</h2>
+          <p class="screen-desc">Visualize your token vocabulary in 3D: Trie Prefix Tree branches, 3D Cyclic Loops, and Radial Spheres.</p>
+        </div>
+        <div class="screen-header-actions">
+          <label for="struct-graph-type" class="graph-select-label">3D View:</label>
+          <select id="struct-graph-type">
+            <option value="tree">🌳 3D Prefix Tree (Trie)</option>
+            <option value="cyclic">🔄 3D Cyclic Transition Network</option>
+            <option value="radial">🌐 3D Radial Sphere</option>
+          </select>
+
+          <div class="threshold-control">
+            <label for="struct-density-range" class="toolbar-label">Tokens:</label>
+            <input type="range" id="struct-density-range" min="15" max="90" step="5" value="35" title="Limit tree branches to prevent crowding" />
+            <span id="struct-density-val">35</span>
+          </div>
+
+          <button type="button" id="struct-auto-rotate-btn" class="btn btn-pill">🔄 Auto-Rotate</button>
+          <button type="button" id="graph-cycle-toggle-btn" class="btn btn-sm btn-pill" title="Highlight detected cycle loops">Highlight Cycles</button>
+          <button type="button" id="struct-reset-view-btn" class="btn btn-secondary btn-sm">Reset 3D</button>
+        </div>
+      </div>
+
+      <div class="panel graph-canvas-panel">
+        <div class="graph-info-bar">
+          <span id="struct-graph-hint">💡 3D Orbit: Drag mouse to rotate • Scroll to zoom • Shift+Drag to pan • Hover node for details</span>
+          <div class="graph-zoom-controls">
+            <button type="button" id="struct-zoom-in-btn" class="zoom-btn">+</button>
+            <button type="button" id="struct-zoom-out-btn" class="zoom-btn">−</button>
+            <span id="struct-zoom-level">100%</span>
+          </div>
+        </div>
+
+        <div class="canvas-container" id="struct-canvas-container">
+          <canvas id="struct-graph-canvas"></canvas>
+          <div id="struct-tooltip" class="tooltip"></div>
+        </div>
+
+        <div id="struct-graph-legend" class="graph-legend"></div>
+      </div>
+    </section>
+
+
+    <!-- ══════════════════════════════════════════════════
+         SCREEN 5: ANALYTICS & INSIGHTS
+         ══════════════════════════════════════════════════ -->
+    <section id="screen-analytics" class="screen-view">
+      <div class="screen-header">
+        <div>
+          <h2>📊 Vocabulary &amp; Tokenizer Analytics</h2>
+          <p class="screen-desc">Comprehensive insights into token distributions, semantic categories, and vocabulary metrics.</p>
+        </div>
+        <div class="screen-header-actions">
+          <button type="button" id="btn-export-vocab" class="btn btn-secondary btn-sm">📥 Export Vocab JSON</button>
+        </div>
+      </div>
+
+      <div class="analytics-grid">
+        <!-- Category Distribution -->
+        <div class="panel">
+          <h3>Semantic Category Breakdown</h3>
+          <p class="panel-sub">Distribution of vocabulary across semantic domains.</p>
+          <div id="category-distribution-bars" class="category-bars-container"></div>
+        </div>
+
+        <!-- Token Length Breakdown -->
+        <div class="panel">
+          <h3>Word Length Distribution</h3>
+          <p class="panel-sub">Character length frequencies of registered tokens.</p>
+          <div id="length-distribution-bars" class="category-bars-container"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>TokenLab &mdash; Built with HTML5 Canvas, Meaning vs. Spelling &amp; Tree/Cyclic Graphs</p>
+  </footer>
+
+  <script src="words.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
